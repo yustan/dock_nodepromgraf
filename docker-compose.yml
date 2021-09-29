@@ -1,0 +1,54 @@
+version: '3'
+
+networks:
+  grafana-net:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.default_bridge: 'true'
+      com.docker.network.bridge.enable_icc: 'true'
+      com.docker.network.bridge.enable_ip_masquerade: 'true'
+      com.docker.network.bridge.host_binding_ipv4: '0.0.0.0'
+      com.docker.network.bridge.name: 'docker0'
+      com.docker.network.driver.mtu: '1500'
+  iso-net:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
+    ipam:
+      config:
+        - subnet: 10.10.10.0/24
+
+
+services:
+  grafana:
+    container_name: grafana_compose
+    tty: true
+    stdin_open: true
+    command: grafana-server --homepath='/usr/share/grafana' --config='/usr/share/grafana/conf/defaults.ini'
+    image: yust/grafana
+    ports:
+      - "3000:3000"
+    networks:
+      iso-net:
+        ipv4_address: 10.10.10.4
+      grafana-net:
+
+  prom:
+    container_name: prom_compose
+    tty: true
+    stdin_open: true
+    command: sudo -u prometheus /usr/local/bin/prometheus     --config.file /etc/prometheus/prometheus.yml     --storage.tsdb.path /var/lib/prometheus/     --web.console.templates=/etc/prometheus/consoles     --web.console.libraries=/etc/prometheus/console_libraries
+    image: yust/prom
+    networks:
+      iso-net:
+        ipv4_address: 10.10.10.3
+
+  node-01:
+    container_name: node_compose
+    tty: true
+    stdin_open: true
+    command: /usr/local/bin/node_exporter
+    image: yust/node-01
+    networks:
+      iso-net:
+        ipv4_address: 10.10.10.2
