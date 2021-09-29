@@ -47,7 +47,13 @@ services:
     container_name: node_compose
     tty: true
     stdin_open: true
-    command: /usr/local/bin/node_exporter
+    privileged: true
+    volumes:
+      - /proc:/host/proc:ro 
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro 
+    command:
+      - '/usr/local/bin/node_exporter'
     image: yust/node-01
     networks:
       iso-net:
